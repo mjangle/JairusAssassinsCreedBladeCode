@@ -1,9 +1,9 @@
-#define button1Pin 6
-#define blade1Sol1OutPin 13
-#define blade1Sol2OutPin 12
-#define button2Pin 7
-#define blade2Sol1OutPin 11
-#define blade2Sol2OutPin 10
+#define button1Pin 2
+#define blade1Sol1OutPin 4
+#define blade1Sol2OutPin 5
+#define button2Pin 3
+#define blade2Sol1OutPin 6
+#define blade2Sol2OutPin 7
 
 
 int button1State = HIGH;
@@ -17,14 +17,24 @@ int currentBlade2State = 0;
 #define bladeRetracted 0
 #define bladeExtend 1
 #define bladeRetract 2
-#define bladeRetracting 3
+#define bladeRetractDelay 3
+#define bladeRetracting 4
 
-const unsigned long debounceDuration = 20;
-const unsigned long bladeRetractTime = 200;
+const unsigned long debounceDuration = 20; // This controls button debounce duration. 
+const unsigned long bladeRetractTime = 300; // adjust this if we're stabbing produce. @jairus 
+const unsigned long bladeSoldDelay = 100; // This controls how long till we switch between the extending solenoid and the retracting solenoid. 
+
 unsigned long debounce1TimeStamp = 0;
 unsigned long debounce2TimeStamp = 0;
+
+unsigned long blade1SolTS = 0;
+unsigned long blade2SolTS = 0;
+
 unsigned long blade1Timer = 0;
 unsigned long blade2Timer = 0;
+
+bool blade1Delayed = false;
+bool blade2Delayed = false;
 
 
 
@@ -34,15 +44,17 @@ void setup() {
   pinMode(button1Pin, INPUT_PULLUP);
   pinMode(blade2Sol1OutPin, OUTPUT);
   pinMode(blade2Sol2OutPin, OUTPUT);
-  pinMode(button2Pin, INPUT_PULLUP);  
+  pinMode(button2Pin, INPUT_PULLUP);
 }
- 
+
 
 void loop() {
-  b1reading = digitalRead(button1Pin);
-  b2reading = digitalRead(button2Pin);
+
+  int b1reading = digitalRead(button1Pin);
+  int b2reading = digitalRead(button2Pin);
+
   unsigned long now = millis();
-  
+
   if (b1reading != lastButton1State) {
     // reset the debouncing timer
     debounce1TimeStamp = now;
@@ -51,7 +63,7 @@ void loop() {
     // reset the debouncing timer
     debounce2TimeStamp = now;
   }
-  
+
   if ((now - debounce1TimeStamp) > debounceDuration) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
@@ -72,7 +84,7 @@ void loop() {
     }
   }
   lastButton1State = b1reading;
-  
+
   if ((now - debounce2TimeStamp) > debounceDuration) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
@@ -93,7 +105,7 @@ void loop() {
     }
   }
   lastButton2State = b2reading;
-  
+
   switch (currentBlade1State) {
     case bladeRetracted:
       digitalWrite(blade1Sol1OutPin, LOW);
@@ -106,17 +118,23 @@ void loop() {
       //Turn off sol extending blade
       digitalWrite(blade1Sol1OutPin, LOW);
       // retract blade
-      digitalWrite(blade1Sol2OutPin, HIGH);
-      blade1Timer = now;
+      blade1SolTS = now;
       currentBlade1State = 3;
+    case bladeRetractDelay:
+      if (now - blade1SolTS > bladeSoldDelay) {
+        digitalWrite(blade1Sol2OutPin, HIGH);
+        blade1Timer = now;
+        currentBlade1State = 4;
+        blade1Delayed = false;
+      }
       break;
     case bladeRetracting:
       if (now - blade1Timer > bladeRetractTime) {
         currentBlade1State = 0;
       }
-      break;      
+      break;
   }
-  
+
   switch (currentBlade2State) {
     case bladeRetracted:
       digitalWrite(blade2Sol1OutPin, LOW);
@@ -128,18 +146,24 @@ void loop() {
     case bladeRetract:
       //Turn off sol extending blade
       digitalWrite(blade2Sol1OutPin, LOW);
+      blade2SolTS = now;
+      currentBlade2State = 3;
+    case bladeRetractDelay:
+    if (now - blade2SolTS > bladeSoldDelay) {
       // retract blade
       digitalWrite(blade2Sol2OutPin, HIGH);
       blade2Timer = now;
-      currentBlade2State = 3;
+      currentBlade2State = 4;
+    }
       break;
     case bladeRetracting:
       if (now - blade2Timer > bladeRetractTime) {
         currentBlade2State = 0;
       }
-      break;      
+      break;
   }
-   
+
+
   /*
   //check for button press, add debounce check
   buttonState = digitalRead(buttonPin);
