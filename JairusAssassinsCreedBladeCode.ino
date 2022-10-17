@@ -108,21 +108,21 @@ void loop() {
 
   switch (currentBlade1State) {
     case bladeRetracted:
-      digitalWrite(blade1Sol1OutPin, LOW);
-      digitalWrite(blade1Sol2OutPin, LOW);
+      digitalWrite(blade1Sol1OutPin, HIGH);
+      digitalWrite(blade1Sol2OutPin, HIGH);
       break;
     case bladeExtend:
-      digitalWrite(blade1Sol1OutPin, HIGH);
+      digitalWrite(blade1Sol1OutPin, LOW);
       break;
     case bladeRetract:
       //Turn off sol extending blade
-      digitalWrite(blade1Sol1OutPin, LOW);
+      digitalWrite(blade1Sol1OutPin, HIGH);
       // retract blade
       blade1SolTS = now;
       currentBlade1State = 3;
     case bladeRetractDelay:
       if (now - blade1SolTS > bladeSoldDelay) {
-        digitalWrite(blade1Sol2OutPin, HIGH);
+        digitalWrite(blade1Sol2OutPin, LOW);
         blade1Timer = now;
         currentBlade1State = 4;
         blade1Delayed = false;
@@ -137,21 +137,21 @@ void loop() {
 
   switch (currentBlade2State) {
     case bladeRetracted:
-      digitalWrite(blade2Sol1OutPin, LOW);
-      digitalWrite(blade2Sol2OutPin, LOW);
+      digitalWrite(blade2Sol1OutPin, HIGH);
+      digitalWrite(blade2Sol2OutPin, HIGH);
       break;
     case bladeExtend:
-      digitalWrite(blade2Sol1OutPin, HIGH);
+      digitalWrite(blade2Sol1OutPin, LOW);
       break;
     case bladeRetract:
       //Turn off sol extending blade
-      digitalWrite(blade2Sol1OutPin, LOW);
+      digitalWrite(blade2Sol1OutPin, HIGH);
       blade2SolTS = now;
       currentBlade2State = 3;
     case bladeRetractDelay:
     if (now - blade2SolTS > bladeSoldDelay) {
       // retract blade
-      digitalWrite(blade2Sol2OutPin, HIGH);
+      digitalWrite(blade2Sol2OutPin, LOW);
       blade2Timer = now;
       currentBlade2State = 4;
     }
