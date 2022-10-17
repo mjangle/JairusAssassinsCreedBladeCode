@@ -20,9 +20,9 @@ int currentBlade2State = 0;
 #define bladeRetractDelay 3
 #define bladeRetracting 4
 
-const unsigned long debounceDuration = 20; // This controls button debounce duration. 
-const unsigned long bladeRetractTime = 300; // adjust this if we're stabbing produce. @jairus 
-const unsigned long bladeSoldDelay = 100; // This controls how long till we switch between the extending solenoid and the retracting solenoid. 
+const unsigned long debounceDuration = 20;
+const unsigned long bladeRetractTime = 300; // adjust this if we're stabbing produce. 
+const unsigned long bladeSoldDelay = 100; // 
 
 unsigned long debounce1TimeStamp = 0;
 unsigned long debounce2TimeStamp = 0;
@@ -32,9 +32,6 @@ unsigned long blade2SolTS = 0;
 
 unsigned long blade1Timer = 0;
 unsigned long blade2Timer = 0;
-
-bool blade1Delayed = false;
-bool blade2Delayed = false;
 
 
 
@@ -120,12 +117,12 @@ void loop() {
       // retract blade
       blade1SolTS = now;
       currentBlade1State = 3;
+      break;
     case bladeRetractDelay:
       if (now - blade1SolTS > bladeSoldDelay) {
         digitalWrite(blade1Sol2OutPin, LOW);
         blade1Timer = now;
         currentBlade1State = 4;
-        blade1Delayed = false;
       }
       break;
     case bladeRetracting:
@@ -148,6 +145,7 @@ void loop() {
       digitalWrite(blade2Sol1OutPin, HIGH);
       blade2SolTS = now;
       currentBlade2State = 3;
+      break;
     case bladeRetractDelay:
     if (now - blade2SolTS > bladeSoldDelay) {
       // retract blade
